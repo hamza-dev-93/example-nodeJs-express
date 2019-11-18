@@ -1,0 +1,15 @@
+<h1> List TODO </h1>
+<p>
+<ul>
+{% for todo in todolist %}
+        <li>{{ todo }} <a href="/todo/delete/{{ loop.index0}} "> X </a> </li>
+    {% endfor %}
+</ul>
+</p>
+<p>
+<form action="/todo/ajouter/" method="post">
+<label for="newtodo">Que dois-je faire ?</label>
+<input type="text" name="newtodo" id="" autofocus >
+<button type="submit">Valider </button>
+</form>
+</p>
