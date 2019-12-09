@@ -1,45 +1,39 @@
-var http = require('http');
-var url = require('url');
-var querystring = require('querystring');
-var EventEmitter = require ('events').EventEmitter;
+var  http = require('http');
+var fs = require('fs');
 
+//chargement du server afficher le fichier index.html
 var server = http.createServer(function(req, res){
-    
-    var page = url.parse(req.url).pathname;
-    console.log(page);
-    var params = querystring.parse(url.parse(req.url).query);   
+    fs.readFile('./index.html', 'utf-8', function(error, content){
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.end(content);
+    });
 
-    res.writeHead(200, {"Content-Type": "text/plain"});
-
-    if ('prenom' in params && 'nom' in params) {
-        res.write('Vous vous appelez ' + params['prenom'] + ' ' + params['nom']);
-    }
-    else {
-        res.write('Vous devez bien avoir un prénom et un nom, non ?');
-    }
-
-    if (page == '/') {
-        res.write('Vous êtes à l\'accueil, que puis-je pour vous ?');
-    }
-    else if (page == '/sous-sol') {
-        res.write('Vous êtes dans la cave à vins, ces bouteilles sont à moi !');
-    }
-    else if (page == '/etage/1/chambre') {
-        res.write('Hé ho, c\'est privé ici !');
-    }
-
-    res.end();
 });
 
-var jeu = new EventEmitter();
-jeu.on('gameover', function(message){
-    console.log(message);
-});
-jeu.emit('gameover', 'vous ete perdu !! sorry !! ');
+// chargement de socket.io
+var io = require('socket.io').listen(server);
 
-server.on('close', function(){
-    console.log('bye bye server !! closed');
+// Quand un client se connecte on le note dans le console 
+io.sockets.on('connection', function(socket){
+    socket.emit('message', 'vous ete bien connecté !!');
+
+     // Quand le serveur reçoit un signal de type "message" du client  (button input Poke)  
+     socket.on('message', function (message) {
+        // console.log('Un client me parle ! Il me dit : ' + message);
+    });	
+
+    //le serveur recuper un pseudo envoyer de client page web
+    socket.on('petit_nouveau', function(pseudo){
+        socket.pseudo = pseudo;
+    })
+
+    socket.on('message', function (message) {
+        console.log(socket.pseudo + ' me parle ! he says : ' + message);
+    });
+
+    // console.log('un Client viens de se connecter');
+    socket.broadcast.emit('message', 'Un autre client vient de se connecter !');
 });
+
 
 server.listen(8080);
-// server.close();
